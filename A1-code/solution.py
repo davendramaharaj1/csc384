@@ -9,6 +9,7 @@
 import os #for time functions
 from search import * #for search engines
 from sokoban import SokobanState, Direction, PROBLEMS #for Sokoban specific classes and problems
+import math
 
 def sokoban_goal_state(state):
   '''
@@ -18,6 +19,16 @@ def sokoban_goal_state(state):
     if box not in state.storage:
       return False
   return True
+
+def find_manhattan_distance(source, destination):
+      '''
+      @param source: tuple (x1, y1) representing the position of the start point
+      @param destination: tuple (x2, y2) representing the position of the end point
+
+      manhattan distance = abs(x2 - x1) + abs(y2 - y1)
+      '''
+      return math.fabs(destination[0] - source[0]) + math.fabs(destination[1] - source[1])
+
 
 def heur_manhattan_distance(state):
 #IMPLEMENT
@@ -38,8 +49,22 @@ def heur_manhattan_distance(state):
                   in this case, state, is to the goal where all boxes are in a storage spot
     '''
 
+    manhattan_dist = 0.0
+    storage_distances = list()
+
+    # for each box in the game state, find the closest storage site
+    for box in state.boxes:
+      for storage in state.storage:
+        # add each distance from a box to a storage site to a list
+        storage_distances.append(find_manhattan_distance(box, storage))
+      
+      # add the minimum distance 
+      manhattan_dist += min(storage_distances)
+      # clear the list to contain new distances of another box from storage sites
+      storage_distances.clear()
     
-    return 0
+    return manhattan_dist
+          
 
 
 #SOKOBAN HEURISTICS
