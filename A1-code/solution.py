@@ -30,6 +30,15 @@ def heur_manhattan_distance(state):
     #When calculating distances, assume there are no obstacles on the grid.
     #You should implement this heuristic function exactly, even if it is tempting to improve it.
     #Your function should return a numeric value; this is the estimate of the distance to the goal.
+
+    # IMPLEMENTATION
+    '''
+    @param state: a SokobanState object which represents an instance of the game 
+    Explanation: The heuristic is a numeric measure of how close the current state of the game,
+                  in this case, state, is to the goal where all boxes are in a storage spot
+    '''
+
+    
     return 0
 
 
