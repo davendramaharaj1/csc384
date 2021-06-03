@@ -6,10 +6,10 @@ from sokoban import sokoban_goal_state
 #Select what to test
 test_time_astar = False
 test_time_gbfs = False
-test_manhattan = True
+test_manhattan = False
 test_fval_function = False
 test_anytime_gbfs = False
-test_alternate = False
+test_alternate = True
 test_anytime_weighted_astar = False
 test_comparisons = False
 

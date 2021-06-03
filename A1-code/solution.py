@@ -86,7 +86,20 @@ def heur_alternate(state):
     #heur_manhattan_distance has flaws.
     #Write a heuristic function that improves upon heur_manhattan_distance to estimate distance between the current state and the goal.
     #Your function should return a numeric value for the estimate of the distance to the goal.
-    return 0
+    manhattan_dist = 0.0
+    storage_dist = {}
+    taken_storage = []
+
+    for box in state.boxes:
+          for storage in state.storage:
+                if(storage not in taken_storage):
+                      storage_dist[storage] = find_manhattan_distance(box, storage)
+          
+          min_key = min(storage_dist.keys(), key=(lambda k: storage_dist[k]))
+          taken_storage.append(min_key)
+          manhattan_dist += storage_dist[min_key]
+          storage_dist = {}
+    return manhattan_dist
 
 def heur_zero(state):
     '''Zero Heuristic can be used to make A* search perform uniform cost search'''
