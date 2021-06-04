@@ -120,14 +120,18 @@ def heur_alternate(state):
     cost_matrix = np.zeros((len(boxes),len(storage)))
     # robot_box_matrix = np.zeros((len(state.robots), len(boxes)))
 
-    corners = [(0, 0), (0, state.height - 1), (state.width - 1, 0), (state.width - 1, state.height - 1)]
+    # check for immovable boxes. If a box cannot move, then the SokobanState will never reach the goal
 
-    if boxes in corners:
-          return float('inf')
+    corners = [(0, 0), (0, state.height - 1), (state.width - 1, 0), (state.width - 1, state.height - 1)]
 
     # fill the cost matrix with the manhattan distances between the box and storage site as the costs
     # this creates a balanced bupartite graph. Time Complexity: O(n^2)
     for i in range(len(boxes)):
+          if (((boxes[i][0] + 1, boxes[i][1]) in state.obstacles and (boxes[i][0], boxes[i][1] + 1) in state.obstacles) or 
+          ((boxes[i][0] - 1, boxes[i][1]) in state.obstacles and (boxes[i][0], boxes[i][1] + 1) in state.obstacles) or 
+          ((boxes[i][0] + 1, boxes[i][1]) in state.obstacles and (boxes[i][0], boxes[i][1] - 1) in state.obstacles) or 
+          ((boxes[i][0] - 1, boxes[i][1]) in state.obstacles and (boxes[i][0], boxes[i][1] - 1) in state.obstacles)) and boxes[i] not in state.storage:
+            return float('inf')
           for j in range(len(storage)):
                 cost_matrix[i][j] = find_manhattan_distance(boxes[i], storage[j])
 
