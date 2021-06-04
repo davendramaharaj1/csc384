@@ -7,6 +7,8 @@
 #   You may not import or otherwise source any of your own files
 
 import os #for time functions
+import scipy.optimize as sci_opt
+import numpy as np
 from search import * #for search engines
 from sokoban import SokobanState, Direction, PROBLEMS #for Sokoban specific classes and problems
 import math
@@ -86,20 +88,61 @@ def heur_alternate(state):
     #heur_manhattan_distance has flaws.
     #Write a heuristic function that improves upon heur_manhattan_distance to estimate distance between the current state and the goal.
     #Your function should return a numeric value for the estimate of the distance to the goal.
-    manhattan_dist = 0.0
-    storage_dist = {}
-    taken_storage = []
+    # manhattan_dist = 0.0
+    # storage_dist = {}
+    # taken_storage = []
 
-    for box in state.boxes:
-          for storage in state.storage:
-                if(storage not in taken_storage):
-                      storage_dist[storage] = find_manhattan_distance(box, storage)
+    # for box in state.boxes:
+    #       for storage in state.storage:
+    #             if(storage not in taken_storage):
+    #                   storage_dist[storage] = find_manhattan_distance(box, storage)
           
-          min_key = min(storage_dist.keys(), key=(lambda k: storage_dist[k]))
-          taken_storage.append(min_key)
-          manhattan_dist += storage_dist[min_key]
-          storage_dist = {}
-    return manhattan_dist
+    #       min_key = min(storage_dist.keys(), key=(lambda k: storage_dist[k]))
+    #       taken_storage.append(min_key)
+    #       manhattan_dist += storage_dist[min_key]
+    #       storage_dist = {}
+
+    ###### ASSIGNMENT PROBLEM ----> Using the method of minimum weight bipartite matching
+    '''
+    Heuristic Explanation:
+    INPUT: Cost Matrix which is a bipartite graph of boxes (B) to storage sites (S)
+    OUTPUT: [row], [col] where corresponsing elements are the optimal matching
+
+    The idea is that we want to find the minimum optimal matching for a box and storage site
+    so that we get the minimum manhattan distance. For a particular sokoban state, we will be biased
+    towards successor states where the boxes are closer to their optimally matched storage sites
+    and we should move in that. 
+    '''
+    boxes = list(state.boxes)
+    storage = list(state.storage)
+
+    # Use numpy arrays to create a cost matrix of box to storage sites
+    cost_matrix = np.zeros((len(boxes),len(storage)))
+    # robot_box_matrix = np.zeros((len(state.robots), len(boxes)))
+
+    corners = [(0, 0), (0, state.height - 1), (state.width - 1, 0), (state.width - 1, state.height - 1)]
+
+    if boxes in corners:
+          return float('inf')
+
+    # fill the cost matrix with the manhattan distances between the box and storage site as the costs
+    # this creates a balanced bupartite graph. Time Complexity: O(n^2)
+    for i in range(len(boxes)):
+          for j in range(len(storage)):
+                cost_matrix[i][j] = find_manhattan_distance(boxes[i], storage[j])
+
+    box, spot = sci_opt.linear_sum_assignment(cost_matrix)
+
+    # Now for each box, find the distance to the closest robot and
+    # prioritize optimal matches with a robot closeby to move it to the goal
+    # for i in range(len(state.robots)):
+    #       for j in range(len(box)):
+    #             robot_box_matrix[i][j] = find_manhattan_distance(state.robots[i], boxes[j])
+
+    # robot_pos, box_pos = sci_opt.linear_sum_assignment(robot_box_matrix)
+          
+
+    return cost_matrix[box, spot].sum() #+ (robot_box_matrix[robot_pos, box_pos].sum())
 
 def heur_zero(state):
     '''Zero Heuristic can be used to make A* search perform uniform cost search'''
