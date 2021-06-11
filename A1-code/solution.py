@@ -90,9 +90,11 @@ def heur_alternate(state):
     boxes = set(state.boxes)
     storage = set(state.storage)
     obstacles = set(state.obstacles)
-    taken_storage = list()
+    taken_storage = set()
 
     unstored_boxes, available_storage = [box for box in boxes if box not in storage], [spot for spot in storage if spot not in boxes]
+    unstored_boxes = set(unstored_boxes)
+    available_storage = set(available_storage)
 
     corners = [(0, 0), (state.width - 1, 0), (0, state.height - 1), (state.width - 1, state.height - 1)]
 
@@ -109,10 +111,12 @@ def heur_alternate(state):
           # DEADLOCK 2: if a box is at an edge against another box or obstacle
           if x_box == 0 or x_box == state.width - 1:
                 if (x_box, y_box - 1) in obstacles or (x_box, y_box + 1) in obstacles: return math.inf
-                if (x_box, y_box - 1) in (unstored_boxes - box) or (x_box, y_box + 1) in (unstored_boxes - box): return math.inf
+                if (x_box, y_box - 1) in (unstored_boxes - set(box)) or (x_box, y_box + 1) in (unstored_boxes - set(box)):
+                      return math.inf
           elif y_box == 0 or y_box == state.height - 1:
                 if (x_box - 1, y_box) in obstacles or (x_box + 1, y_box) in obstacles: return math.inf
-                if (x_box - 1, y_box) in (unstored_boxes - box) or (x_box + 1, y_box) in (unstored_boxes - box): return math.inf
+                if (x_box - 1, y_box) in (unstored_boxes - set(box)) or (x_box + 1, y_box) in (unstored_boxes - set(box)):
+                      return math.inf
           
           # DEADLOCK 3: check if box is at an edge but spot is not at the edge
           # left edge
@@ -148,6 +152,41 @@ def heur_alternate(state):
           # right and top
           elif (x_box + 1, y_box) in unstored_boxes.union(obstacles) and (x_box, y_box - 1) in unstored_boxes.union(obstacles):
               return math.inf
+
+    distance_storage= dict()
+    distance_robot = list()
+    # calculate hval now that DEADLOCK checks are completed
+    for box in unstored_boxes:
+          # get box poition (x,y)
+          x_box, y_box = box[0], box[1]
+
+          # iterate over all available storage
+          for spot in available_storage:
+                if spot not in taken_storage:
+                    distance_storage[spot] = find_manhattan_distance(box, spot)
+          
+          # get the min key
+          min_key = min(distance_storage.keys(), key=(lambda k: distance_storage[k]))
+
+          # the min key is now a taken storage
+          taken_storage.add(min_key)
+
+          # add to hval 
+          hval += distance_storage[min_key]
+
+          # now find the closest robot
+          for robot in state.robots:
+                distance_robot.append(find_manhattan_distance(box, robot))
+          
+          # get the min distance of box to a robot and add to hval
+          hval += min(distance_robot)
+
+          # clear distance_storage and distance_robot for the next box
+          distance_robot = []
+          distance_storage = {}
+
+    return hval
+                
 
 def heur_zero(state):
     '''Zero Heuristic can be used to make A* search perform uniform cost search'''
