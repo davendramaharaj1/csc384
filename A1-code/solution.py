@@ -172,9 +172,7 @@ def heur_alternate(state):
           taken_storage.add(optimal_spot)
 
           # add to hval 
-          hval += smallest_box_spot_dist
-
-          hval += min(smallest_box_robot_dist, smallest_box_spot_dist)
+          hval += (smallest_box_spot_dist + min(smallest_box_robot_dist, smallest_box_spot_dist))
 
     return hval
 
