@@ -103,7 +103,7 @@ def heur_alternate(state):
     robots = set(state.robots)
     taken_storage = set()
 
-    unstored_boxes, available_storage = set([box for box in boxes if box not in storage]), [spot for spot in storage if spot not in boxes]
+    unstored_boxes, available_storage = {box for box in boxes if box not in storage}, [spot for spot in storage if spot not in boxes]
 
     all_boxes_obstables = obstacles.union(unstored_boxes)
    
