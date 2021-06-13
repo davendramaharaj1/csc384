@@ -276,7 +276,7 @@ def anytime_weighted_astar(initial_state, heur_fn, weight=1., timebound = 10):
   '''OUTPUT: A goal state (if a goal is found), else False'''
   '''implementation of weighted astar algorithm'''
 
-  weight = 6
+  weight = 5
 
   # get the fval function
   fval_funct = (lambda sN: fval_function(sN, weight))
