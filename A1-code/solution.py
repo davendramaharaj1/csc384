@@ -87,6 +87,31 @@ def check_corners_deadlocks(state, box, box_obs):
 
       return x_blocked and y_blocked
 
+def check_edge_deadlock(state, box, storage):
+      # left edge
+      if box[0] == 0:
+          spot_left_edge = any((True for spot in storage if spot[0] == 0))
+          if not spot_left_edge:
+            return True
+      # right edge
+      elif box[0] == state.width - 1:
+          spot_right_edge = any(
+            (True for spot in storage if spot[0] == state.width - 1))
+          if not spot_right_edge:
+            return True
+      # top edge
+      elif box[1] == 0:
+          spot_top_edge = any((True for spot in storage if spot[1] == 0))
+          if not spot_top_edge:
+            return True
+      # bottom edge
+      elif box[1] == state.height - 1:
+          spot_bottom_edge = any(
+            (True for spot in storage if spot[1] == state.height - 1))
+          if not spot_bottom_edge:
+            return True
+      else: return False
+
 def heur_alternate(state):
 # #IMPLEMENT
     '''a better heuristic'''
@@ -114,25 +139,10 @@ def heur_alternate(state):
 
           # DEADLOCK CHECK: if the box is blocked in a corner or by some obstacle or other box
           if(check_corners_deadlocks(state, box, boxes_obs)): return math.inf
-          
-          ########### DEADLOCK 3: check if box is at an edge but spot is not at the edge ###########
-          # # left edge
-          # if x_box == 0:
-          #     spot_left_edge = any((True for obs in obstacles if obs[0] == 0))
-          #     if not spot_left_edge: return math.inf
-          # # right edge
-          # elif x_box == state.width - 1:
-          #     spot_right_edge = any((True for obs in obstacles if obs[0] == state.width - 1))
-          #     if not spot_right_edge: return math.inf
-          # # top edge
-          # elif y_box == 0:
-          #     spot_top_edge = any((True for obs in obstacles if obs[1] == 0))
-          #     if not spot_top_edge: return math.inf
-          # # bottom edge
-          # elif y_box == state.height - 1:
-          #     spot_bottom_edge = any((True for obs in obstacles if obs[1] == state.height - 1))
-          #     if not spot_bottom_edge: return math.inf
-          
+
+          # DEADLOCK CHECK: if a box is at an edge but the spot isn't, then deadlock
+          if(check_edge_deadlock(state, box, storage)): return math.inf
+                    
           # ########### DEADLOCK 4: check if box is blocked by 2 other boxes or obstacles ###########
           # # left and bottom
           # if (x_box - 1, y_box) in boxes_obs and (x_box, y_box + 1) in boxes_obs:
@@ -155,7 +165,7 @@ def heur_alternate(state):
           # assume smallest distance between the current box and spot/robot is infinite so it finds the smalles
           smallest_box_spot_dist = float('inf')
           smallest_box_robot_dist = float('inf')
-          
+
           # optimal spot per iteration is always reset
           optimal_spot = None
 
