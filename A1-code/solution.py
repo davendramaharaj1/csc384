@@ -100,7 +100,6 @@ def heur_alternate(state):
     boxes = set(state.boxes)
     storage = set(state.storage)
     obstacles = set(state.obstacles)
-    robots = set(state.robots)
     taken_storage = set()
 
     unstored_boxes, available_storage = {box for box in boxes if box not in storage}, [spot for spot in storage if spot not in boxes]
@@ -166,7 +165,7 @@ def heur_alternate(state):
                         optimal_spot = spot
           
           # iterate over all the robots for the current box
-          for robot in robots:
+          for robot in state.robots:
               smallest_box_robot_dist = min(find_manhattan_distance(robot, box), smallest_box_robot_dist)
 
           # the closest spot is now a taken by the current box
