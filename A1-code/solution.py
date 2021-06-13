@@ -144,20 +144,20 @@ def heur_alternate(state):
           if(check_edge_deadlock(state, box, storage)): return math.inf
                     
           # ########### DEADLOCK 4: check if box is blocked by 2 other boxes or obstacles ###########
-          # # left and bottom
-          # if (x_box - 1, y_box) in boxes_obs and (x_box, y_box + 1) in boxes_obs:
+          # left and bottom
+          # if (box[0] - 1, box[1]) in boxes_obs and (box[0], box[1] + 1) in boxes_obs:
           #       return math.inf
           
           # # left and top
-          # elif (x_box - 1, y_box) in boxes_obs and (x_box, y_box - 1) in boxes_obs:
+          # elif (box[0] - 1, box[1]) in boxes_obs and (box[0], box[1] - 1) in boxes_obs:
           #       return math.inf
           
           # # right and bottom
-          # elif (x_box + 1, y_box) in boxes_obs and (x_box, y_box + 1) in boxes_obs:
+          # elif (box[0] + 1, box[1]) in boxes_obs and (box[0], box[1] + 1) in boxes_obs:
           #     return math.inf
           
           # # right and top
-          # elif (x_box + 1, y_box) in boxes_obs and (x_box, y_box - 1) in boxes_obs:
+          # elif (box[0] + 1, box[1]) in boxes_obs and (box[0], box[1] - 1) in boxes_obs:
           #     return math.inf
 
     # calculate hval now that DEADLOCK checks are completed
@@ -211,7 +211,7 @@ def fval_function(sN, weight):
     #The function must return a numeric f-value.
     #The value will determine your state's position on the Frontier list during a 'custom' search.
     #You must initialize your search engine object as a 'custom' search engine if you supply a custom fval function.
-    return 0
+    return sN.gval + weight * sN.hval
 
 def fval_function_XUP(sN, weight):
 #IMPLEMENT
@@ -224,7 +224,7 @@ def fval_function_XUP(sN, weight):
     @param float weight: Weight given by Anytime Weighted A star
     @rtype: float
     """
-    return 0
+    return (1/(2*weight))*(sN.gval + sN.hval + math.sqrt(((sN.gval+sN.hval)**2) + 4*weight*(weight-1)*(sN.hval**2)))
 
 def fval_function_XDP(sN, weight):
 #IMPLEMENT
@@ -237,7 +237,7 @@ def fval_function_XDP(sN, weight):
     @param float weight: Weight given by Anytime Weighted A star
     @rtype: float
     """
-    return 0
+    return (1/(2*weight))*(sN.gval+(2*weight-1)*sN.hval + math.sqrt((sN.gval-sN.hval)**2 + 4*weight*sN.gval*sN.hval))
 
 def compare_weighted_astars():
 #IMPLEMENT
@@ -276,7 +276,39 @@ def anytime_weighted_astar(initial_state, heur_fn, weight=1., timebound = 10):
   '''OUTPUT: A goal state (if a goal is found), else False'''
   '''implementation of weighted astar algorithm'''
 
-  return False
+  weight = 6
+
+  # get the fval function
+  fval_funct = (lambda sN: fval_function(sN, weight))
+
+  # instantiate a search engine
+  search_eng = SearchEngine(strategy='custom', cc_level='full')
+
+  # get ready to search
+  search_eng.init_search(initial_state, sokoban_goal_state, heur_fn=heur_fn, fval_function=fval_funct)
+
+  # start searching
+  start = os.times()[0]
+
+  # initial costbound
+  costbound = (math.inf, math.inf, math.inf)
+
+  # goal_state, stats = search_eng.search(timebound=timebound)
+  res = False
+
+  # keep searching for optimal solutions until out of time
+  while(os.times()[0] - start <= timebound):
+
+        # do another search
+        goal_state, stats = search_eng.search(timebound=timebound - os.times()[0] + start, costbound=costbound)
+
+        # check for a goal state
+        if(goal_state):
+              costbound = (goal_state.gval, math.inf, math.inf)
+              res = goal_state
+        else: break
+
+  return res
 
 def anytime_gbfs(initial_state, heur_fn, timebound = 10):
 #IMPLEMENT
