@@ -76,6 +76,16 @@ def trivial_heuristic(state):
         count += 1
   return count
      
+def check_corners_deadlocks(state, box, box_obs):
+      '''
+      This function checks if the box is in a corner or blocked by some other box or
+      obstacle in the horizontal and vertical direction
+      INPUT: box coordinates, corners, boxes and obstacles list
+      '''
+      x_blocked = box[0] == 0 or box[0] == state.width - 1 or (box[0] - 1, box[1]) in box_obs or (box[0] + 1, box[1]) in box_obs
+      y_blocked = box[1] == 0 or box[1] == state.height - 1 or (box[0], box[1] + 1) in box_obs or (box[0], box[1] - 1) in box_obs
+
+      return x_blocked and y_blocked
 
 def heur_alternate(state):
 # #IMPLEMENT
@@ -92,53 +102,22 @@ def heur_alternate(state):
     obstacles = set(state.obstacles)
     robots = set(state.robots)
     taken_storage = set()
-    taken_robot = set()
 
     unstored_boxes, available_storage = set([box for box in boxes if box not in storage]), set([spot for spot in storage if spot not in boxes])
 
-    corners = [
-              (0, 0),       # top left
-              (state.width - 1, 0),   # top right
-              (0, state.height - 1),  # bottom left
-              (state.width - 1, state.height - 1) # bottom right
-              ]
+    all_boxes_obstables = obstacles.union(unstored_boxes)
    
     for box in unstored_boxes:
           # Get the box position
           x_box, y_box = box[0], box[1]
 
-          # get all boxes without the current box
-          remaining_boxes = unstored_boxes - {box}
-
           # union of obstacles and remaining boxes
-          boxes_obs = obstacles.union(remaining_boxes)
+          boxes_obs = all_boxes_obstables - {box}
 
-          ########### DEADLOCK 1: check if any unstored box is in a corner ##########
-          if box in corners: return math.inf
-
-          ########### DEADLOCK 2: if a box is at an edge against another box or obstacle ###########
-
-          # left edge ---> x = 0
-          if x_box == 0:
-              if (x_box, y_box - 1) in boxes_obs or (x_box, y_box + 1) in boxes_obs:
-                    return math.inf
+          # DEADLOCK CHECK: if the box is blocked in a corner or by some obstacle or other box
+          if(check_corners_deadlocks(state, box, boxes_obs)): return math.inf
           
-          # right edge ---> x = state.width - 1
-          elif x_box == state.width - 1:
-              if (x_box, y_box - 1) in boxes_obs or (x_box, y_box + 1) in boxes_obs:
-                    return math.inf
-
-          # top edge ---> y = 0
-          elif y_box == 0:
-              if (x_box - 1, y_box) in boxes_obs or (x_box + 1, y_box) in boxes_obs:
-                    return math.inf
-
-          # bottom edge ---> y = state.height - 1
-          elif y_box == state.height - 1:
-              if (x_box - 1, y_box) in boxes_obs or (x_box + 1, y_box) in boxes_obs:
-                    return math.inf
-          
-          # ########### DEADLOCK 3: check if box is at an edge but spot is not at the edge ###########
+          ########### DEADLOCK 3: check if box is at an edge but spot is not at the edge ###########
           # # left edge
           # if x_box == 0:
           #     spot_left_edge = any((True for obs in obstacles if obs[0] == 0))
@@ -176,30 +155,29 @@ def heur_alternate(state):
     # calculate hval now that DEADLOCK checks are completed
     for box in unstored_boxes:
           # define a dictionary with key-value ---> spot : distance from current box
-          distance_storage = dict()
-          # distance_robot = []
-          distance_robot = math.inf
+          smallest_box_spot_dist = float('inf')
+          smallest_box_robot_dist = float('inf')
+          optimal_spot = None
 
           # iterate over all available storage
           for spot in available_storage:
                 if spot not in taken_storage:
-                    distance_storage[spot] = find_manhattan_distance(box, spot)
+                    dist = find_manhattan_distance(box, spot)
+                    if(dist < smallest_box_spot_dist):
+                        smallest_box_spot_dist = dist
+                        optimal_spot = spot
           
           # iterate over all the robots for the current box
           for robot in robots:
-                # distance_robot.append(find_manhattan_distance(robot, box))
-                distance_robot = min(find_manhattan_distance(robot, box), distance_robot)
-
-          # get the spot closest to the current box
-          min_key = min(distance_storage.keys(), key=(lambda k: distance_storage[k]))
+              smallest_box_robot_dist = min(find_manhattan_distance(robot, box), smallest_box_robot_dist)
 
           # the closest spot is now a taken by the current box
-          taken_storage.add(min_key)
+          taken_storage.add(optimal_spot)
 
           # add to hval 
-          hval += distance_storage[min_key]
-          # hval += min(distance_robot)
-          hval += min(distance_robot, distance_storage[min_key])
+          hval += smallest_box_spot_dist
+
+          hval += min(smallest_box_robot_dist, smallest_box_spot_dist)
 
     return hval
 
