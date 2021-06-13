@@ -102,13 +102,14 @@ def heur_alternate(state):
     obstacles = set(state.obstacles)
     taken_storage = set()
 
+    # get all unstored unboxes and available storage
     unstored_boxes, available_storage = {box for box in boxes if box not in storage}, [spot for spot in storage if spot not in boxes]
 
     all_boxes_obstables = obstacles.union(unstored_boxes)
    
     for box in unstored_boxes:
 
-          # union of obstacles and remaining boxes
+          # union of obstacles and remaining boxes as they can block the current box if next to it
           boxes_obs = all_boxes_obstables - {box}
 
           # DEADLOCK CHECK: if the box is blocked in a corner or by some obstacle or other box
@@ -151,9 +152,11 @@ def heur_alternate(state):
 
     # calculate hval now that DEADLOCK checks are completed
     for box in unstored_boxes:
-          # define a dictionary with key-value ---> spot : distance from current box
+          # assume smallest distance between the current box and spot/robot is infinite so it finds the smalles
           smallest_box_spot_dist = float('inf')
           smallest_box_robot_dist = float('inf')
+          
+          # optimal spot per iteration is always reset
           optimal_spot = None
 
           # iterate over all available storage
