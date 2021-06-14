@@ -284,17 +284,17 @@ def anytime_weighted_astar(initial_state, heur_fn, weight=1., timebound = 10):
   # instantiate a search engine
   search_eng = SearchEngine(strategy='custom', cc_level='full')
 
-  # get ready to search
-  search_eng.init_search(initial_state, sokoban_goal_state, heur_fn=heur_fn, fval_function=fval_funct)
+  # initial costbound
+  costbound = (math.inf, math.inf, math.inf)
+
+  res = False
 
   # start searching
   start = os.times()[0]
 
-  # initial costbound
-  costbound = (math.inf, math.inf, math.inf)
-
-  # goal_state, stats = search_eng.search(timebound=timebound)
-  res = False
+  # get ready to search
+  search_eng.init_search(initial_state, sokoban_goal_state,
+                         heur_fn=heur_fn, fval_function=fval_funct)
 
   # keep searching for optimal solutions until out of time
   while(os.times()[0] - start <= timebound):
@@ -316,4 +316,32 @@ def anytime_gbfs(initial_state, heur_fn, timebound = 10):
   '''INPUT: a sokoban state that represents the start state and a timebound (number of seconds)'''
   '''OUTPUT: A goal state (if a goal is found), else False'''
   '''implementation of anytime greedy best-first search'''
-  return False
+
+  # instantiate a search engine
+  search_eng = SearchEngine(strategy='best_first', cc_level='full')
+
+  # initial costbound
+  costbound = (math.inf, math.inf, math.inf)
+
+  res = False
+
+  # start searching
+  start = os.times()[0]
+
+  # get ready to search
+  search_eng.init_search(initial_state, sokoban_goal_state, heur_fn=heur_fn)
+
+  # keep searching for optimal solutions until out of time
+  while(os.times()[0] - start <= timebound):
+
+      # do another search
+      goal_state, stats = search_eng.search(timebound=timebound - os.times()[0] + start, costbound=costbound)
+
+      # check for a goal state
+      if goal_state:
+            costbound = (goal_state.gval, math.inf, math.inf)
+            res = goal_state
+      else:
+            break
+
+  return res
