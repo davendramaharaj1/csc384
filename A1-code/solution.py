@@ -12,6 +12,7 @@ from search import *  # for search engines
 # for Sokoban specific classes and problems
 from sokoban import SokobanState, Direction, PROBLEMS
 import math
+import csv
 
 
 def sokoban_goal_state(state):
@@ -285,14 +286,52 @@ def compare_weighted_astars():
     Note that you will submit your CSV file (comparison.csv) with your code
     """
 
-    for i in range(0, 3):
-        problem = PROBLEMS[i]
-        for weight in [2, 3,4,5]:
-          #you can write code in here if you like
-          pass
+    # list of functions for A* variants
+    funcions_list = [
+                    fval_function,
+                    fval_function,
+                    fval_function_XDP,
+        fval_function_XUP
+        ]
+    strategy_list = ['astar', 'custom', 'custom', 'custom']
+
+    columns = ['A', 'B', 'C', 'D', 'E', 'F']
+
+    # open and dump contents into a file
+    with open('comparison.csv', 'w') as file:
+        #  get csv object for handling writes
+        csv_write = csv.writer(file)
+
+        # write the fields into the csv file
+        csv_write.writerow(columns)
+
+        for i in range(0, 3):
+            problem = PROBLEMS[i]
+            for weight in [2, 3,4,5]:
+                for count, fn in enumerate(funcions_list):
+                     # create a search engine
+                     se = SearchEngine(strategy=strategy_list[count])
+
+                      # initialize the search
+                      if strategy_list[count] == 'astar':
+                           se.init_search(initState = problem, goal_fn=sokoban_goal_state, heur_fn=heur_manhattan_distance, fval_function=lambda sN: fn(sN, 1))
+                      else:
+                           se.init_search(initState = problem, goal_fn=sokoban_goal_state, heur_fn=heur_manhattan_distance, fval_function=lambda sN: fn(sN, weight))
+
+                      # implement search for goal state
+                      goal_state, stats = se.search(timebound=5)
+
+                      # get a list of the row values
+                      if strategy_list[count] == 'astar':
+                           row = [i, weight -  1, 1, stats.states_expanded, stats.states_generated, goal_state.gval]
+                      else:
+                           row = [i, weight -  1, weight, stats.states_expanded, stats.states_generated, goal_state.gval]
+
+                      # write a row to the csv file
+                      csv_write.writerow(row)
 
 
-def anytime_weighted_astar(initial_state, heur_fn, weight=1., timebound = 10):
+def anytime_weighted_astar(initial_state, heur_fn, weight=1., timebound= 10):
   #IMPLEMENT
   '''Provides an implementation of anytime weighted a-star, as described in the HW1 handout'''
   '''INPUT: a sokoban state that represents the start state and a timebound (number of seconds)'''
