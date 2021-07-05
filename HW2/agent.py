@@ -1,12 +1,35 @@
 from __future__ import nested_scopes
 from checkers_game import *
+import numpy as np
 
 cache = {} #you can use this to implement state caching!
 
 # Method to compute utility value of terminal state
 def compute_utility(state, color):
-    return 0
 
+    utility = 0
+
+    # convert board list of lists into numpy array
+    board = np.array(state.board)
+
+    pieces = ['r', 'R', 'b', 'B']
+
+    # get the occurences of each piece in the game board
+    elt, count = np.unique(board, return_counts=True)
+
+    hash_table = dict(zip(elt, count))
+
+    for piece in pieces:
+        if piece not in hash_table.keys():
+            hash_table[piece] = 0
+    
+    black_score = 2*hash_table['B'] + hash_table['b']
+    red_score = 2*hash_table['R'] + hash_table['r']
+
+    # calculate utility depending on color
+    utility = red_score - black_score if color == 'r' else black_score - red_score
+
+    return utility
 
 # Better heuristic value of board
 def compute_heuristic(state, color): 
