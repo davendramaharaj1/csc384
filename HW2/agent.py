@@ -1,6 +1,7 @@
 from __future__ import nested_scopes
 from checkers_game import *
 import numpy as np
+import math
 
 cache = {} #you can use this to implement state caching!
 
@@ -39,13 +40,51 @@ def compute_heuristic(state, color):
 
 ############ MINIMAX ###############################
 def minimax_min_node(state, color, limit, caching=0):
-    # IMPLEMENT
-    return None, None
+
+    # initial best state is None
+    best_state = None
+
+    opp = 'b' if color == 'r' else 'r'
+
+    # check for terminal state
+    if len(successors(state, color)) == 0 or limit == 0:
+        return compute_utility(state, opp), best_state
+
+    # initial value is infinity
+    value = float('inf')
+
+    # iterate over all the successors
+    for succ in successors(state, color):
+        next_value, next_state = minimax_max_node(succ, opp, limit - 1, caching=0)
+
+        if next_value < value:
+            value, best_state = next_value, succ
+
+    return value, best_state
 
 
 def minimax_max_node(state, color, limit, caching=0):
-    # IMPLEMENT
-    return None, None
+    
+    # initial best state is None
+    best_state = None
+
+    opp = 'b' if color == 'r' else 'r'
+
+    # check for terminal state
+    if len(successors(state, color)) == 0 or limit == 0:
+        return compute_utility(state, color), best_state
+
+    # initial value is -infinity
+    value = float('-inf')
+
+    # iterate over all the successors
+    for succ in successors(state, color):
+        next_value, next_state = minimax_min_node(succ, opp, limit - 1, caching=0)
+
+        if next_value > value:
+            value, best_state = next_value, succ
+
+    return value, best_state
 
 
 def select_move_minimax(state, color, limit, caching=0):
@@ -63,19 +102,68 @@ def select_move_minimax(state, color, limit, caching=0):
         If caching is ON (i.e. 1), use state caching to reduce the number of state evaluations.
         If caching is OFF (i.e. 0), do NOT use state caching to reduce the number of state evaluations.
     """
-    # IMPLEMENT
-    return None
+    if minimax_max_node(state, color, limit, caching=0)[1].move == []:
+        return None
+    return minimax_max_node(state, color, limit, caching=0)[1].move
 
 
 ############ ALPHA-BETA PRUNING #####################
 def alphabeta_min_node(state, color, alpha, beta, limit, caching=0, ordering=0):
-    # IMPLEMENT
-    return None, None
 
+    # initial best state is None
+    best_state = None
+
+    opp = 'b' if color == 'r' else 'r'
+
+    # check for terminal state
+    if len(successors(state, color)) == 0 or limit == 0:
+        return compute_utility(state, opp), best_state
+
+    # initial value is infinity
+    value = float('inf')
+
+    # iterate over all the successors
+    for succ in successors(state, color):
+        next_value, next_state = alphabeta_max_node(succ, opp, alpha, beta, limit - 1, caching=0, ordering=0)
+
+        if next_value < value:
+            value, best_state = next_value, succ
+        
+        # check for pruning
+        if value <= alpha:
+            return value, best_state
+            
+        beta = min(beta, value)
+
+    return value, best_state
 
 def alphabeta_max_node(state, color, alpha, beta, limit, caching=0, ordering=0):
-    # IMPLEMENT
-    return None, None
+
+    # initial best state is None
+    best_state = None
+
+    opp = 'b' if color == 'r' else 'r'
+
+    # check for terminal state
+    if len(successors(state, color)) == 0 or limit == 0:
+        return compute_utility(state, color), best_state
+
+    # initial value is -infinity
+    value = float('-inf')
+
+    # iterate over all the successors
+    for succ in successors(state, color):
+        next_value, next_state = alphabeta_min_node(succ, opp, alpha, beta, limit - 1, caching=0, ordering=0)
+
+        if next_value > value:
+            value, best_state = next_value, succ
+
+        if value >= beta:
+            return value, best_state
+        
+        alpha = max(alpha, value)
+
+    return value, best_state
 
 
 def select_move_alphabeta(state, color, limit, caching=0, ordering=0):
@@ -96,7 +184,9 @@ def select_move_alphabeta(state, color, limit, caching=0, ordering=0):
     If ordering is OFF (i.e. 0), do NOT use node ordering to expedite pruning and reduce the number of state evaluations. 
     """
     # IMPLEMENT
-    return None
+    if alphabeta_max_node(state, color, float('-inf'), float('inf'), limit, caching=0, ordering=0)[1].move == []:
+        return None
+    return alphabeta_max_node(state, color, float('-inf'), float('inf'), limit, caching=0, ordering=0)[1].move
 
 
 # ======================== Class GameEngine =======================================
