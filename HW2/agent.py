@@ -46,6 +46,12 @@ def minimax_min_node(state, color, limit, caching=0):
 
     opp = 'b' if color == 'r' else 'r'
 
+    res = np.array(state.board)
+    key = hash(tuple(map(tuple, res)))
+
+    if caching and key in cache.keys():
+        return cache[key]
+
     # check for terminal state
     if len(successors(state, color)) == 0 or limit == 0:
         return compute_utility(state, opp), best_state
@@ -55,11 +61,14 @@ def minimax_min_node(state, color, limit, caching=0):
 
     # iterate over all the successors
     for succ in successors(state, color):
-        next_value, next_state = minimax_max_node(succ, opp, limit - 1, caching=0)
+        next_value, next_state = minimax_max_node(succ, opp, limit - 1, caching)
 
         if next_value < value:
             value, best_state = next_value, succ
 
+    if caching and best_state is not None and key not in cache.keys():
+        cache[key] = value, best_state
+        
     return value, best_state
 
 
@@ -70,6 +79,12 @@ def minimax_max_node(state, color, limit, caching=0):
 
     opp = 'b' if color == 'r' else 'r'
 
+    res = np.array(state.board)
+    key = hash(tuple(map(tuple, res)))
+
+    if caching and key in cache.keys():
+        return cache[key]
+
     # check for terminal state
     if len(successors(state, color)) == 0 or limit == 0:
         return compute_utility(state, color), best_state
@@ -79,10 +94,13 @@ def minimax_max_node(state, color, limit, caching=0):
 
     # iterate over all the successors
     for succ in successors(state, color):
-        next_value, next_state = minimax_min_node(succ, opp, limit - 1, caching=0)
+        next_value, next_state = minimax_min_node(succ, opp, limit - 1, caching)
 
         if next_value > value:
             value, best_state = next_value, succ
+
+    if caching and best_state is not None and key not in cache.keys():
+        cache[key] = value, best_state
 
     return value, best_state
 
@@ -102,9 +120,10 @@ def select_move_minimax(state, color, limit, caching=0):
         If caching is ON (i.e. 1), use state caching to reduce the number of state evaluations.
         If caching is OFF (i.e. 0), do NOT use state caching to reduce the number of state evaluations.
     """
-    if minimax_max_node(state, color, limit, caching=0)[1].move == []:
-        return None
-    return minimax_max_node(state, color, limit, caching=0)[1].move
+    res = minimax_max_node(state, color, limit, caching)[1].move
+    if res:
+        return res
+    return None
 
 
 ############ ALPHA-BETA PRUNING #####################
@@ -115,6 +134,12 @@ def alphabeta_min_node(state, color, alpha, beta, limit, caching=0, ordering=0):
 
     opp = 'b' if color == 'r' else 'r'
 
+    res = np.array(state.board)
+    key = hash(tuple(map(tuple, res)))
+
+    if caching and key in cache.keys():
+        return cache[key]
+
     # check for terminal state
     if len(successors(state, color)) == 0 or limit == 0:
         return compute_utility(state, opp), best_state
@@ -124,7 +149,7 @@ def alphabeta_min_node(state, color, alpha, beta, limit, caching=0, ordering=0):
 
     # iterate over all the successors
     for succ in successors(state, color):
-        next_value, next_state = alphabeta_max_node(succ, opp, alpha, beta, limit - 1, caching=0, ordering=0)
+        next_value, next_state = alphabeta_max_node(succ, opp, alpha, beta, limit - 1, caching, ordering)
 
         if next_value < value:
             value, best_state = next_value, succ
@@ -135,6 +160,9 @@ def alphabeta_min_node(state, color, alpha, beta, limit, caching=0, ordering=0):
             
         beta = min(beta, value)
 
+    if caching and best_state is not None and key not in cache.keys():
+        cache[key] = value, best_state
+
     return value, best_state
 
 def alphabeta_max_node(state, color, alpha, beta, limit, caching=0, ordering=0):
@@ -143,6 +171,12 @@ def alphabeta_max_node(state, color, alpha, beta, limit, caching=0, ordering=0):
     best_state = None
 
     opp = 'b' if color == 'r' else 'r'
+
+    res = np.array(state.board)
+    key = hash(tuple(map(tuple, res)))
+
+    if caching and key in cache.keys():
+        return cache[key]
 
     # check for terminal state
     if len(successors(state, color)) == 0 or limit == 0:
@@ -153,7 +187,7 @@ def alphabeta_max_node(state, color, alpha, beta, limit, caching=0, ordering=0):
 
     # iterate over all the successors
     for succ in successors(state, color):
-        next_value, next_state = alphabeta_min_node(succ, opp, alpha, beta, limit - 1, caching=0, ordering=0)
+        next_value, next_state = alphabeta_min_node(succ, opp, alpha, beta, limit - 1, caching, ordering)
 
         if next_value > value:
             value, best_state = next_value, succ
@@ -163,8 +197,10 @@ def alphabeta_max_node(state, color, alpha, beta, limit, caching=0, ordering=0):
         
         alpha = max(alpha, value)
 
+    if caching and best_state is not None and key not in cache.keys():
+        cache[key] = value, best_state
+    
     return value, best_state
-
 
 def select_move_alphabeta(state, color, limit, caching=0, ordering=0):
     """
@@ -184,10 +220,10 @@ def select_move_alphabeta(state, color, limit, caching=0, ordering=0):
     If ordering is OFF (i.e. 0), do NOT use node ordering to expedite pruning and reduce the number of state evaluations. 
     """
     # IMPLEMENT
-    if alphabeta_max_node(state, color, float('-inf'), float('inf'), limit, caching=0, ordering=0)[1].move == []:
-        return None
-    return alphabeta_max_node(state, color, float('-inf'), float('inf'), limit, caching=0, ordering=0)[1].move
-
+    res = alphabeta_max_node(state, color, float('-inf'), float('inf'), limit, caching, ordering)[1].move
+    if res:
+        return res
+    return None 
 
 # ======================== Class GameEngine =======================================
 class GameEngine:
