@@ -3,9 +3,11 @@ from checkers_game import *
 import numpy as np
 import math
 
-cache = {} #you can use this to implement state caching!
+cache = {}  # you can use this to implement state caching!
 
 # Method to compute utility value of terminal state
+
+
 def compute_utility(state, color):
 
     utility = 0
@@ -23,7 +25,7 @@ def compute_utility(state, color):
     for piece in pieces:
         if piece not in hash_table.keys():
             hash_table[piece] = 0
-    
+
     black_score = 2*hash_table['B'] + hash_table['b']
     red_score = 2*hash_table['R'] + hash_table['r']
 
@@ -33,7 +35,9 @@ def compute_utility(state, color):
     return utility
 
 # Better heuristic value of board
-def compute_heuristic(state, color): 
+
+
+def compute_heuristic(state, color):
     # IMPLEMENT
     return 0  # change this!
 
@@ -52,28 +56,32 @@ def minimax_min_node(state, color, limit, caching=0):
     if caching and key in cache.keys():
         return cache[key]
 
+    # get the children nodes
+    children = successors(state, color)
+
     # check for terminal state
-    if len(successors(state, color)) == 0 or limit == 0:
+    if len(children) == 0 or limit == 0:
         return compute_utility(state, opp), best_state
 
     # initial value is infinity
     value = float('inf')
 
     # iterate over all the successors
-    for succ in successors(state, color):
-        next_value, next_state = minimax_max_node(succ, opp, limit - 1, caching)
+    for succ in children:
+        next_value, next_state = minimax_max_node(
+            succ, opp, limit - 1, caching)
 
         if next_value < value:
             value, best_state = next_value, succ
 
-    if caching and best_state is not None and key not in cache.keys():
+    if caching and best_state is not None:
         cache[key] = value, best_state
-        
+
     return value, best_state
 
 
 def minimax_max_node(state, color, limit, caching=0):
-    
+
     # initial best state is None
     best_state = None
 
@@ -85,21 +93,25 @@ def minimax_max_node(state, color, limit, caching=0):
     if caching and key in cache.keys():
         return cache[key]
 
+    # get the children nodes
+    children = successors(state, color)
+
     # check for terminal state
-    if len(successors(state, color)) == 0 or limit == 0:
+    if len(children) == 0 or limit == 0:
         return compute_utility(state, color), best_state
 
     # initial value is -infinity
     value = float('-inf')
 
     # iterate over all the successors
-    for succ in successors(state, color):
-        next_value, next_state = minimax_min_node(succ, opp, limit - 1, caching)
+    for succ in children:
+        next_value, next_state = minimax_min_node(
+            succ, opp, limit - 1, caching)
 
         if next_value > value:
             value, best_state = next_value, succ
 
-    if caching and best_state is not None and key not in cache.keys():
+    if caching and best_state is not None:
         cache[key] = value, best_state
 
     return value, best_state
@@ -121,9 +133,9 @@ def select_move_minimax(state, color, limit, caching=0):
         If caching is OFF (i.e. 0), do NOT use state caching to reduce the number of state evaluations.
     """
     res = minimax_max_node(state, color, limit, caching)[1].move
-    if res:
-        return res
-    return None
+    if len(res) < 1:
+        return None
+    return res
 
 
 ############ ALPHA-BETA PRUNING #####################
@@ -149,21 +161,23 @@ def alphabeta_min_node(state, color, alpha, beta, limit, caching=0, ordering=0):
 
     # iterate over all the successors
     for succ in successors(state, color):
-        next_value, next_state = alphabeta_max_node(succ, opp, alpha, beta, limit - 1, caching, ordering)
+        next_value, next_state = alphabeta_max_node(
+            succ, opp, alpha, beta, limit - 1, caching, ordering)
 
         if next_value < value:
             value, best_state = next_value, succ
-        
+
         # check for pruning
         if value <= alpha:
             return value, best_state
-            
+
         beta = min(beta, value)
 
     if caching and best_state is not None and key not in cache.keys():
         cache[key] = value, best_state
 
     return value, best_state
+
 
 def alphabeta_max_node(state, color, alpha, beta, limit, caching=0, ordering=0):
 
@@ -187,20 +201,22 @@ def alphabeta_max_node(state, color, alpha, beta, limit, caching=0, ordering=0):
 
     # iterate over all the successors
     for succ in successors(state, color):
-        next_value, next_state = alphabeta_min_node(succ, opp, alpha, beta, limit - 1, caching, ordering)
+        next_value, next_state = alphabeta_min_node(
+            succ, opp, alpha, beta, limit - 1, caching, ordering)
 
         if next_value > value:
             value, best_state = next_value, succ
 
         if value >= beta:
             return value, best_state
-        
+
         alpha = max(alpha, value)
 
     if caching and best_state is not None and key not in cache.keys():
         cache[key] = value, best_state
-    
+
     return value, best_state
+
 
 def select_move_alphabeta(state, color, limit, caching=0, ordering=0):
     """
@@ -220,12 +236,15 @@ def select_move_alphabeta(state, color, limit, caching=0, ordering=0):
     If ordering is OFF (i.e. 0), do NOT use node ordering to expedite pruning and reduce the number of state evaluations. 
     """
     # IMPLEMENT
-    res = alphabeta_max_node(state, color, float('-inf'), float('inf'), limit, caching, ordering)[1].move
+    res = alphabeta_max_node(state, color, float(
+        '-inf'), float('inf'), limit, caching, ordering)[1].move
     if res:
         return res
-    return None 
+    return None
 
 # ======================== Class GameEngine =======================================
+
+
 class GameEngine:
     def __init__(self, str_name):
         self.str = str_name
@@ -238,7 +257,8 @@ class GameEngine:
         global PLAYER
         PLAYER = self.str
         if alphabeta:
-            result = select_move_alphabeta(Board(state), PLAYER, limit, caching, ordering)
+            result = select_move_alphabeta(
+                Board(state), PLAYER, limit, caching, ordering)
         else:
             result = select_move_minimax(Board(state), PLAYER, limit, caching)
 
