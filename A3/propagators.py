@@ -95,6 +95,7 @@ def prop_FC(csp, newVar=None):
 
     #initialize variables
     cons = None
+    res = list()
 
     # get the constraints dependings on newVar
     # if newVar has a value, get all the constraints
@@ -113,8 +114,24 @@ def prop_FC(csp, newVar=None):
 
         # var_X is now the unassigned variable in the current constraint
         var_X = con.get_unasgn_vars()[0]    # there is only 1
-    
-    return None, None
+
+        # do FC for the constraint 
+        for val in var_X.cur_domain():
+
+            # if X = val and con is falsified, remove from current domain
+            if ~(con.has_support(var_X, val)):
+
+                # add to the pruning list for that variable
+                var_X.prune_value(val)
+
+                # add var/value pair to pruned list
+                res.append((var_X, val))
+            
+            # if domain of var_X is empty, stop FC
+            if var_X.domain_size() is 0:
+                return False, res
+
+    return True, res
 
 def prop_GAC(csp, newVar=None):
     '''Do GAC propagation. If newVar is None we do initial GAC enforce 
