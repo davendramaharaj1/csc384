@@ -71,6 +71,8 @@ var_ordering == a function with the following template
     var_ordering returns the next Variable to be assigned, as per the definition
     of the heuristic it implements.
    '''
+from cspbase import Constraint
+from queue import Queue
 
 def prop_BT(csp, newVar=None):
     '''Do plain backtracking propagation. That is, do no 
@@ -154,7 +156,7 @@ def prop_FC(csp, newVar=None):
                 res.append((var_X, val))
             
         # if domain of var_X is empty, stop FC
-        if var_X.domain_size() is 0:
+        if var_X.cur_domain_size() is 0:
             return False, res
 
     return True, res
@@ -163,8 +165,38 @@ def prop_GAC(csp, newVar=None):
     '''Do GAC propagation. If newVar is None we do initial GAC enforce 
        processing all constraints. Otherwise we do GAC enforce with
        constraints containing newVar on GAC Queue'''
-    #IMPLEMENT
-    return None, None
+
+    cons = None
+    res = list()
+    queue = Queue()
+
+    # if newVar has something, do GAC for constraints containing newVar
+    if newVar:
+        for con in csp.get_cons_with_var(newVar):
+            queue.put(con)
+    else:
+        for con in csp.get_all_cons():
+            queue.put(con)
+    
+    while not queue.empty():
+
+        con = queue.get()
+
+        for V in con.get_scope():
+            for d in V.cur_domain():
+
+                if not con.has_support(V, d):
+                    res.append((V, d))
+                    V.prune_value(d)
+                
+                    if V.cur_domain_size() is 0:
+                        return False, res
+                    else:
+                        for _con in csp.get_cons_with_var(V):
+                            if _con not in queue:
+                                queue.put(_con)
+
+    return True, res
 
 def ord_mrv(csp):
     ''' return variable according to the Minimum Remaining Values heuristic '''
