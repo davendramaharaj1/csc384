@@ -200,7 +200,12 @@ def prop_GAC(csp, newVar=None):
 
 def ord_mrv(csp):
     ''' return variable according to the Minimum Remaining Values heuristic '''
-    #IMPLEMENT
-    return None
+    # return the variablw with the fewest legal values
+    # get all unassigned variables
+    vars = csp.get_all_unasgn_var()
 
-	
+    # find the variable with the smallest current domain size
+    domain_sizes = [var.cur_domain_size() for var in vars]   
+    min_idx = domain_sizes.index(min(domain_sizes))
+
+    return vars[min_idx]
