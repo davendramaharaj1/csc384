@@ -25,6 +25,38 @@ cell of the Futoshiki puzzle.
 from cspbase import *
 import itertools
 
+def get_variables(futo_grid):
+    '''
+    input: a list of lists representing the game futoshiki including both cells and inequalities
+    return: a list of all the variables 
+    '''
+    variables = list()
+
+    # get the size of the grid: nxn
+    grid_size = len(futo_grid)
+
+    col_size = 2*grid_size - 1
+
+    # in any grid, the variables are in the even columns: 0, 2, 4,...
+    for row in range(grid_size):
+
+        for col in range(col_size, 2):
+
+            name = "var {} {}".format(row, col)
+
+            # if the cell at (row, col) == 0, then domain = [1,2,..n]
+            # else if cell at (row, col) == x, then domain = [x]
+            if futo_grid[row][col] == 0:
+                domain = range(grid_size + 1)
+            else:
+                domain = [futo_grid[row][col]]
+
+            # create the variable
+            var = Variable(name, domain)
+
+            # add variable to the list of variables
+            variables.append(var)
+
 def futoshiki_csp_model_1(futo_grid):
     ##IMPLEMENT
     return None, None
