@@ -71,7 +71,7 @@ var_ordering == a function with the following template
     var_ordering returns the next Variable to be assigned, as per the definition
     of the heuristic it implements.
    '''
-from cspbase import Constraint
+from cspbase import *
 from queue import Queue
 
 def prop_BT(csp, newVar=None):
@@ -99,7 +99,7 @@ def build_scope_vals(constraint, varX):
     vals = list()
     varX_idx = -1
     for idx, var in enumerate(constraint.get_scope()):
-        if var.get_assigned_value != None:
+        if var.get_assigned_value() != None:
             vals.append(var.get_assigned_value())
         elif var == varX:
             vals.append(None)
@@ -128,7 +128,7 @@ def prop_FC(csp, newVar=None):
     for con in cons:
 
         # ensure the current constraint has only 1 unassigned variable
-        if con.get_n_unasgn() is not 1:
+        if con.get_n_unasgn() != 1:
             continue
 
         # var_X is now the unassigned variable in the current constraint
@@ -147,7 +147,7 @@ def prop_FC(csp, newVar=None):
             vals[varX_idx] = val
 
             # if X = val and con is falsified, remove from current domain
-            if ~(con.check(vals)):
+            if not con.check(vals):
 
                 # add to the pruning list for that variable
                 var_X.prune_value(val)
@@ -156,7 +156,7 @@ def prop_FC(csp, newVar=None):
                 res.append((var_X, val))
             
         # if domain of var_X is empty, stop FC
-        if var_X.cur_domain_size() is 0:
+        if var_X.cur_domain_size() == 0:
             return False, res
 
     return True, res
@@ -189,11 +189,11 @@ def prop_GAC(csp, newVar=None):
                     res.append((V, d))
                     V.prune_value(d)
                 
-                    if V.cur_domain_size() is 0:
+                    if V.cur_domain_size() == 0:
                         return False, res
                     else:
                         for _con in csp.get_cons_with_var(V):
-                            if _con not in queue:
+                            if _con not in queue.queue:
                                 queue.put(_con)
 
     return True, res
@@ -202,7 +202,7 @@ def ord_mrv(csp):
     ''' return variable according to the Minimum Remaining Values heuristic '''
     # return the variablw with the fewest legal values
     # get all unassigned variables
-    vars = csp.get_all_unasgn_var()
+    vars = csp.get_all_unasgn_vars()
 
     # find the variable with the smallest current domain size
     domain_sizes = [var.cur_domain_size() for var in vars]   
