@@ -47,7 +47,7 @@ def get_variables(futo_grid):
             # if the cell at (row, col) == 0, then domain = [1,2,..n]
             # else if cell at (row, col) == x, then domain = [x]
             if futo_grid[row][col] == 0:
-                domain = range(grid_size + 1)
+                domain = range(1, grid_size + 1)
             else:
                 domain = [futo_grid[row][col]]
 
@@ -56,6 +56,8 @@ def get_variables(futo_grid):
 
             # add variable to the list of variables
             variables.append(var)
+    
+    return variables
 
 def futoshiki_csp_model_1(futo_grid):
     ##IMPLEMENT
