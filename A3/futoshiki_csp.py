@@ -22,7 +22,6 @@ cell of the Futoshiki puzzle.
       all-different constraints for both the row and column constraints. 
 
 '''
-from numpy.core.fromnumeric import var
 from cspbase import *
 from itertools import combinations
 import numpy as np
@@ -81,6 +80,57 @@ def get_binary_constraints(csp, array, name):
 
             # add constraint to csp
             csp.add_constraint(c=constraint)
+
+def get_inequality_constraints(csp, array, grid):
+   # make grid a numpy array
+   grid_array = np.array(grid)
+
+   # get the positions of '<'
+   x1, y1 = np.where(grid_array == '<')
+   less_than = list(zip(x1, y1))
+
+   # get the positions of '>'
+   x2, y2 = np.where(grid_array == '>')
+   greater_than = list(zip(x2, y2))
+
+   # less than constraints
+   name = 'less than constraint'
+   for x, y in less_than:
+       var1 = array[x][(y - 1)/2]
+       var2 = array[x][(y + 1)/2]
+       scope = [var1, var2]
+
+       sat_tuples = list()
+       sat_tuples = [(i, j) for i in var1.cur_domain() for j in var2.cur_domain() if i < j]
+
+       # create constraint
+       constraint = Constraint(name=name, scope=scope)
+
+       # add satisfying tuple
+       constraint.add_satisfying_tuples(sat_tuples)
+
+       # add constraint
+       csp.add_constraint(constraint)
+    
+    # greater than constraints
+   name = 'greater than constraint'
+   for x, y in less_than:
+       var1 = array[x][(y - 1)/2]
+       var2 = array[x][(y + 1)/2]
+       scope = [var1, var2]
+
+       sat_tuples = list()
+       sat_tuples = [(i, j) for i in var1.cur_domain() for j in var2.cur_domain() if i > j]
+
+       # create constraint
+       constraint = Constraint(name=name, scope=scope)
+
+       # add satisfying tuple
+       constraint.add_satisfying_tuples(sat_tuples)
+
+       # add constraint
+       csp.add_constraint(constraint)
+
 
 def futoshiki_csp_model_1(futo_grid):
     '''
