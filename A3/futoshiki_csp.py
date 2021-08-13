@@ -114,7 +114,7 @@ def get_inequality_constraints(csp, array, grid):
     
     # greater than constraints
    name = 'greater than constraint'
-   for x, y in less_than:
+   for x, y in greater_than:
        var1 = array[x][(y - 1)/2]
        var2 = array[x][(y + 1)/2]
        scope = [var1, var2]
