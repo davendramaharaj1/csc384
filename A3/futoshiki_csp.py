@@ -136,8 +136,6 @@ def futoshiki_csp_model_1(futo_grid):
     '''
     Uses binary constraints by taking the combinations of 2 of each row and each column
     '''
-    csp = None
-
     # extract the variables from the grid
     var_list = get_variables(futo_grid)
 
@@ -146,10 +144,19 @@ def futoshiki_csp_model_1(futo_grid):
     futo_array = np.array(var_list).reshape(-1, size)
 
     # create a csp object 
-    csp = CSP(name='Model 1', vars=var_list)
+    model1 = CSP(name='Model 1', vars=var_list)
 
-    
-    return None, None
+    # get the binary constraints for row
+    get_binary_constraints(model1, futo_array, name='a row constraint')
+
+    # get binary constraints for a column
+    array_transposed = futo_array.transpose()
+    get_binary_constraints(model1, array_transposed, name='a col constraint')
+
+    # get the inequality constraints
+    get_inequality_constraints(model1, futo_array, futo_grid)
+
+    return model1, var_list
     
 
 def futoshiki_csp_model_2(futo_grid):
