@@ -22,8 +22,10 @@ cell of the Futoshiki puzzle.
       all-different constraints for both the row and column constraints. 
 
 '''
+from numpy.core.fromnumeric import var
 from cspbase import *
-import itertools
+from itertools import combinations
+import numpy as np
 
 def get_variables(futo_grid):
     '''
@@ -59,8 +61,44 @@ def get_variables(futo_grid):
     
     return variables
 
+def get_binary_constraints(csp, array, name):
+    # iterate over every row to get the row constraint
+    for row in array:
+        # get all the binary constrains for row
+        for var1, var2 in list(combinations(row, 2)):
+            # get the scope for this row constraint
+            scope = [var1, var2]
+
+            # get the satisfying tuples
+            sat_tuple = list()
+            sat_tuple = [(x, y) for x in var1.cur_domain() for y in var2.cur_domain() if x != y]
+
+            # create the constraint
+            constraint = Constraint(name=name, scope=scope)
+
+            # add the satisfying tuples
+            constraint.add_satisfying_tuples(sat_tuple)
+
+            # add constraint to csp
+            csp.add_constraint(c=constraint)
+
 def futoshiki_csp_model_1(futo_grid):
-    ##IMPLEMENT
+    '''
+    Uses binary constraints by taking the combinations of 2 of each row and each column
+    '''
+    csp = None
+
+    # extract the variables from the grid
+    var_list = get_variables(futo_grid)
+
+    # make an nxn numpy array of the variable list
+    size = len(futo_grid)
+    futo_array = np.array(var_list).reshape(-1, size)
+
+    # create a csp object 
+    csp = CSP(name='Model 1', vars=var_list)
+
+    
     return None, None
     
 
