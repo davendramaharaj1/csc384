@@ -23,7 +23,7 @@ cell of the Futoshiki puzzle.
 
 '''
 from cspbase import *
-from itertools import combinations
+from itertools import combinations, product
 import numpy as np
 
 def get_variables(futo_grid):
@@ -41,7 +41,7 @@ def get_variables(futo_grid):
     # in any grid, the variables are in the even columns: 0, 2, 4,...
     for row in range(grid_size):
 
-        for col in range(col_size, 2):
+        for col in range(0, col_size, 2):
 
             name = "var {} {}".format(row, col)
 
@@ -96,8 +96,8 @@ def get_inequality_constraints(csp, array, grid):
    # less than constraints
    name = 'less than constraint'
    for x, y in less_than:
-       var1 = array[x][(y - 1)/2]
-       var2 = array[x][(y + 1)/2]
+       var1 = array[x][(y - 1)//2]
+       var2 = array[x][(y + 1)//2]
        scope = [var1, var2]
 
        sat_tuples = list()
@@ -115,8 +115,8 @@ def get_inequality_constraints(csp, array, grid):
     # greater than constraints
    name = 'greater than constraint'
    for x, y in greater_than:
-       var1 = array[x][(y - 1)/2]
-       var2 = array[x][(y + 1)/2]
+       var1 = array[x][(y - 1)//2]
+       var2 = array[x][(y + 1)//2]
        scope = [var1, var2]
 
        sat_tuples = list()
@@ -131,6 +131,33 @@ def get_inequality_constraints(csp, array, grid):
        # add constraint
        csp.add_constraint(constraint)
 
+def get_all_different_constraints(csp, array, name):
+    # number of elements per row
+    N = len(array)
+
+    # iterate over every row 
+    for row in array:
+        scope = list()
+        all_domains = list()
+        sat_tuples = list()
+
+        # create a 2D list of the curr domain of each variable in this row
+        all_domains = [var.cur_domain() for var in row]
+
+        # scope of this constraint is the row
+        scope = row
+
+        # get all possible permutations of N lists in all_val
+        sat_tuples = [perm for perm in list(product(*all_domains)) if len(set(perm)) == N]
+        
+        # create the constraint
+        constraint = Constraint(name=name, scope=scope)
+
+        # add the satisfying tuples
+        constraint.add_satisfying_tuples(sat_tuples)
+
+        # add constraint to csp
+        csp.add_constraint(c=constraint)
 
 def futoshiki_csp_model_1(futo_grid):
     '''
@@ -156,10 +183,8 @@ def futoshiki_csp_model_1(futo_grid):
     # get the inequality constraints
     get_inequality_constraints(model1, futo_array, futo_grid)
 
-    return model1, var_list
+    return model1, futo_array.tolist()
     
-
 def futoshiki_csp_model_2(futo_grid):
-    ##IMPLEMENT 
     return None, None
    
