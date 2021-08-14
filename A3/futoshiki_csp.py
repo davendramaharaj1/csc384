@@ -147,9 +147,9 @@ def get_all_different_constraints(csp, array, name):
         # scope of this constraint is the row
         scope = row
 
-        # get all possible permutations of N lists in all_val
+        # get all possible permutations of N lists in all_domains
         sat_tuples = [perm for perm in list(product(*all_domains)) if len(set(perm)) == N]
-        
+
         # create the constraint
         constraint = Constraint(name=name, scope=scope)
 
@@ -186,5 +186,27 @@ def futoshiki_csp_model_1(futo_grid):
     return model1, futo_array.tolist()
     
 def futoshiki_csp_model_2(futo_grid):
-    return None, None
-   
+    '''
+    Uses all_different constraints for each row and  column
+    '''
+    # extract the variables from the grid
+    var_list = get_variables(futo_grid)
+
+    # make an nxn numpy array of the variable list
+    size = len(futo_grid)
+    futo_array = np.array(var_list).reshape(-1, size)
+
+    # create a csp object
+    model2 = CSP(name='Model 2', vars=var_list)
+
+    # get all_diff constraints for rows
+    get_all_different_constraints(model2, futo_array, name='all_diff_row_constraint')
+
+    # get all_diff constraints for columns
+    array_transposed = futo_array.transpose()
+    get_all_different_constraints(model2, array_transposed, name='all_diff_col_constraint')
+
+    # get the inequality constraints
+    get_inequality_constraints(model2, futo_array, futo_grid)
+
+    return model2, futo_array.tolist()   
