@@ -91,21 +91,19 @@ def train_HMM(train_file_name):
     P(t2 | t1) = num of bigrams = t1 t2 / num of bigrams beginning with t1
     '''
     # create a 2d array 
-    transition = np.zeros((N_tags, N_tags))
+    transition = [[0 for x in range(N_tags)] for y in range(N_tags)]
 
     # get a list of bigrams of tags
     bigrams = list() # list of tuples (t1, t2)
     first_word = list() # list of first words that start each bigram 
 
-    final_sentence_idx = sent_inds[-1]
-
     for idx in range(len(sent_inds)):
         sentence = list()
         # if we reached the last sentence
-        if idx == final_sentence_idx:
+        if idx == len(sent_inds) - 1:
             sentence = pos_data[sent_inds[idx]:]
         else:
-            sentence = pos_data[sent_inds[idx]: sent_inds[idx+1]]
+            sentence = pos_data[sent_inds[idx]:sent_inds[idx+1]]
         
         # we only consider the tags, not the words
         sentence = [word[1] for word in sentence]
@@ -124,9 +122,9 @@ def train_HMM(train_file_name):
         _tag_i = UNIVERSAL_TAGS[i]
         for j in range(N_tags):
             _tag_j = UNIVERSAL_TAGS[j]
-            transition[i,j] = np.true_divide(bigram_table[(_tag_i, _tag_j)], first_table[_tag_i])
+            transition[i][j] = np.true_divide(bigram_table[(_tag_i, _tag_j)], first_table[_tag_i])
     
-    transition = np.log(transition).tolist()
+    transition = np.log(transition)
 
     #################### Emission using Naive Tagger Estimation ####################
     emission = dict()
