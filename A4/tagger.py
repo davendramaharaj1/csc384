@@ -77,16 +77,12 @@ def train_HMM(train_file_name):
 
     # get the tags of the 1st word for every sequence
     tags = [pos_data[word][1] for word in sent_inds]
-
     # create a frequency table for the tags of first words
     tag_histogram = Counter(tags)
-
     # order the entries from the histogram according to Universal Tags
     prior_frequency = [tag_histogram[tag_val] for tag_val in UNIVERSAL_TAGS]
-
     # get the total
     all_words = sum(tag_histogram.values())
-
     # get the log probabilities per tag
     prior = np.log([num/all_words for num in prior_frequency])
 
@@ -114,7 +110,25 @@ def train_HMM(train_file_name):
         # we only consider the tags, not the words
         sentence = [word[1] for word in sentence]
 
-        
+        # get the bigrams and initial word per bigram
+        for t_val in range(len(sentence) - 1):
+            bigrams.append((sentence[t_val], sentence[t_val+1]))
+            first_word.append(sentence[t_val])
+    
+    # create histograms of the bigrams and first word per bigram to calculate probabilties
+    bigram_table = Counter(bigrams)
+    first_table = Counter(first_word)
+
+    # populate transition table
+    for i in range(N_tags):
+        _tag_i = UNIVERSAL_TAGS[i]
+        for j in range(N_tags):
+            _tag_j = UNIVERSAL_TAGS[j]
+            transition[i,j] = np.true_divide(bigram_table[(_tag_i, _tag_j)], first_table[_tag_i])
+    
+    transition = np.log(transition).tolist()
+
+    #################### Emission using Naive Tagger Estimation ####################
 
     return prior, transition, emission
     
