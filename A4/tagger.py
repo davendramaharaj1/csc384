@@ -129,6 +129,16 @@ def train_HMM(train_file_name):
     transition = np.log(transition).tolist()
 
     #################### Emission using Naive Tagger Estimation ####################
+    emission = dict()
+
+    # get the tag count and tag, word pair
+    tag_list, tag_word = [word[1] for word in pos_data], [word[::-1] for word in pos_data]
+
+    # get the frequency for each tag count and token pair
+    tag_freq, tag_word_freq = Counter(tag_list), Counter(tag_word)
+
+    for pair, freq in tag_word_freq.items():
+        emission[pair] = np.log(np.true_divide(freq, tag_freq[pair[0]]))
 
     return prior, transition, emission
     
