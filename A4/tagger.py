@@ -189,7 +189,7 @@ def tag(train_file_name, test_file_name):
         for state in range(S):
             # if (tag, word) doesn't exist, put a small probability
             value_trellis[state, 0] = prior[state] + emission.get((UNIVERSAL_TAGS[state], sentence[0]), small_prob)
-            path_trellis[state, 0] = [state]
+            path_trellis[state][0] = [state]
         
         # For S2 - S1, find the most likely prior for the current state
         for obs in range(1, O):
@@ -200,7 +200,7 @@ def tag(train_file_name, test_file_name):
                 curr_transition = transition[:, state]
 
                 # retrieve emission probabilities of obs given some tag
-                emission_pair = np.array([emission.get((UNIVERSAL_TAGS[state], sentence[obs]), small_prob)] * S)
+                emission_pair = np.ones(S) * emission.get((UNIVERSAL_TAGS[state], sentence[obs]), small_prob)
 
                 # combine prev_value with transition and emission
                 combined = np.sum([previous_val, curr_transition, emission_pair], axis=0)
