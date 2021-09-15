@@ -153,9 +153,45 @@ def tag(train_file_name, test_file_name):
     pos_data = read_data_test(test_file_name+'.txt')
     sent_inds = read_data_ind(test_file_name+'.ind')
 
+    res = list()
+
     ####################
     # STUDENT CODE HERE
     ####################
+    small_prob = np.log([1e-10])[0]
+
+    # iterate through every sentence
+    for idx in range(len(sent_inds)):
+
+        # get the sentence
+        sentence = list()
+
+        # if we've reached the last sentence
+        if idx == len(sent_inds) - 1:
+            sentence = pos_data[sent_inds[idx]:]
+        else:
+            sentence = pos_data[sent_inds[idx]:sent_inds[idx+1]]
+        
+        '''
+        S: States ---> in this case, tags to deduce (we want to predict the states)
+        O: Observations ---> in this case, words in sentence
+        '''
+        S = N_tags
+        O = len(sentence)
+
+        # probability trellis filled with small values instead of zero
+        value_trellis = np.full((S, O), small_prob)
+        # path trellis to track argmax
+        path_trellis = [[[] for obs in range(O)] for state in range(S)]
+
+        # Determine trellis values for 1st column 
+        for state in range(S):
+            # if (tag, word) doesn't exist, put a small probability
+            value_trellis[state, 0] = emission.get((UNIVERSAL_TAGS[state], sentence[0]), small_prob) + prior(state)
+            path_trellis[state, 0] = [state]
+        
+        
+
 
     write_results(test_file_name+'.pred', results)
 
