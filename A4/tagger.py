@@ -166,12 +166,11 @@ def tag(train_file_name, test_file_name):
         # get the sentence
         sentence = list()
 
-        # if we've reached the last sentence
-        if idx == len(sent_inds) - 1:
-            sentence = pos_data[sent_inds[idx]:]
-        else:
+        # if we haven't reached the last sentence yet...
+        if idx != len(sent_inds) - 1:
             sentence = pos_data[sent_inds[idx]:sent_inds[idx+1]]
-        
+        else:
+            sentence = pos_data[sent_inds[idx]:]
         '''
         From lecture notes:
         S: States ---> in this case, tags to deduce (we want to predict the states)
@@ -183,7 +182,7 @@ def tag(train_file_name, test_file_name):
         # probability trellis filled with small values instead of zero
         value_trellis = np.full((S, O), small_prob)
         # path trellis to track argmax
-        path_trellis = [[[] for obs in range(O)] for state in range(S)]
+        path_trellis = [[[]] * O] * S
 
         # Determine trellis values for 1st column 
         for state in range(S):
@@ -200,7 +199,7 @@ def tag(train_file_name, test_file_name):
                 curr_transition = transition[:, state]
 
                 # retrieve emission probabilities of obs given some tag
-                emission_pair = np.ones(S) * emission.get((UNIVERSAL_TAGS[state], sentence[obs]), small_prob)
+                emission_pair = np.full(N_tags, 1) * emission.get((UNIVERSAL_TAGS[state], sentence[obs]), small_prob)
 
                 # combine prev_value with transition and emission
                 combined = np.sum([previous_val, curr_transition, emission_pair], axis=0)
@@ -211,12 +210,18 @@ def tag(train_file_name, test_file_name):
                 value_trellis[state, obs] = combined[max]
                 path_trellis[state][obs] = path_trellis[max][obs - 1] + [state]
         
+        # get the max values 
+        max_val = np.argmax(value_trellis[:, O-1])
+
         # get the indices of the tags on the max path
-        tag_idx = path_trellis[np.argmax(value_trellis[:, O-1])][O-1]
+        tag_idx = path_trellis[max_val][O-1]
 
         # get the tags
-        res_tags = [UNIVERSAL_TAGS[tval] for tval in tag_idx]
+        res_tags = list()
 
+        for tval in tag_idx:
+            res_tags.append(UNIVERSAL_TAGS[tval])
+        
         # append to results
         results += res_tags
 
