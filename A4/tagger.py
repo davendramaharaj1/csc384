@@ -158,7 +158,7 @@ def tag(train_file_name, test_file_name):
     ####################
     # STUDENT CODE HERE
     ####################
-    small_prob = np.log([1e-10])[0]
+    small_prob = np.log([1e-5])[0]
 
     # iterate through every sentence
     for idx in range(len(sent_inds)):
@@ -182,7 +182,7 @@ def tag(train_file_name, test_file_name):
         # probability trellis filled with small values instead of zero
         value_trellis = np.full((S, O), small_prob)
         # path trellis to track argmax
-        path_trellis = [[[]] * O] * S
+        path_trellis = [[[] for obs in range(O)] for state in range(S)]
 
         # Determine trellis values for 1st column 
         for state in range(S):
