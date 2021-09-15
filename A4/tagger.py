@@ -153,7 +153,7 @@ def tag(train_file_name, test_file_name):
     pos_data = read_data_test(test_file_name+'.txt')
     sent_inds = read_data_ind(test_file_name+'.ind')
 
-    res = list()
+    results = list()
 
     ####################
     # STUDENT CODE HERE
@@ -173,6 +173,7 @@ def tag(train_file_name, test_file_name):
             sentence = pos_data[sent_inds[idx]:sent_inds[idx+1]]
         
         '''
+        From lecture notes:
         S: States ---> in this case, tags to deduce (we want to predict the states)
         O: Observations ---> in this case, words in sentence
         '''
@@ -187,11 +188,37 @@ def tag(train_file_name, test_file_name):
         # Determine trellis values for 1st column 
         for state in range(S):
             # if (tag, word) doesn't exist, put a small probability
-            value_trellis[state, 0] = emission.get((UNIVERSAL_TAGS[state], sentence[0]), small_prob) + prior(state)
+            value_trellis[state, 0] = prior[state] + emission.get((UNIVERSAL_TAGS[state], sentence[0]), small_prob)
             path_trellis[state, 0] = [state]
         
-        
+        # For S2 - S1, find the most likely prior for the current state
+        for obs in range(1, O):
+            # we need the previous probabilities
+            previous_val = value_trellis[:, obs - 1]
+            for state in range(S):
+                # retrieve transition probabilities until current state
+                curr_transition = transition[:, state]
 
+                # retrieve emission probabilities of obs given some tag
+                emission_pair = np.array([emission.get(UNIVERSAL_TAGS[state], sentence[obs], small_prob)] * S)
+
+                # combine prev_value with transition and emission
+                combined = np.sum([previous_val, curr_transition, emission_pair], axis=0)
+
+                # find the indices yielding max
+                max = np.argmax(combined)
+
+                value_trellis[state, obs] = combined[max]
+                path_trellis[state][obs] = path_trellis[max][obs - 1] + [state]
+        
+        # get the indices of the tags on the max path
+        tag_idx = path_trellis[np.argmax(value_trellis[:, O-1])][O-1]
+
+        # get the tags
+        res_tags = [UNIVERSAL_TAGS[tval] for tval in tag_idx]
+
+        # append to results
+        results += res_tags
 
     write_results(test_file_name+'.pred', results)
 
