@@ -200,7 +200,7 @@ def tag(train_file_name, test_file_name):
                 curr_transition = transition[:, state]
 
                 # retrieve emission probabilities of obs given some tag
-                emission_pair = np.array([emission.get(UNIVERSAL_TAGS[state], sentence[obs], small_prob)] * S)
+                emission_pair = np.array([emission.get((UNIVERSAL_TAGS[state], sentence[obs]), small_prob)] * S)
 
                 # combine prev_value with transition and emission
                 combined = np.sum([previous_val, curr_transition, emission_pair], axis=0)
