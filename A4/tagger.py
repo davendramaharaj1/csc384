@@ -98,15 +98,17 @@ def train_HMM(train_file_name):
     first_word = list() # list of first words that start each bigram 
 
     for idx in range(len(sent_inds)):
+        _sentence = list()
         sentence = list()
         # if we reached the last sentence
-        if idx == len(sent_inds) - 1:
-            sentence = pos_data[sent_inds[idx]:]
+        if idx != len(sent_inds) - 1:
+            _sentence = pos_data[sent_inds[idx]:sent_inds[idx+1]]
         else:
-            sentence = pos_data[sent_inds[idx]:sent_inds[idx+1]]
-        
+            _sentence = pos_data[sent_inds[idx]:]
+
         # we only consider the tags, not the words
-        sentence = [word[1] for word in sentence]
+        for word in _sentence:
+            sentence.append(word[1])
 
         # get the bigrams and initial word per bigram
         for t_val in range(len(sentence) - 1):
@@ -153,12 +155,13 @@ def tag(train_file_name, test_file_name):
     pos_data = read_data_test(test_file_name+'.txt')
     sent_inds = read_data_ind(test_file_name+'.ind')
 
-    results = list()
-
     ####################
     # STUDENT CODE HERE
     ####################
-    small_prob = np.log([1e-5])[0]
+
+    results = list()
+    SMALL = np.log([1e-12])[0]
+
 
     # iterate through every sentence
     for idx in range(len(sent_inds)):
@@ -180,29 +183,24 @@ def tag(train_file_name, test_file_name):
         O = len(sentence)
 
         # probability trellis filled with small values instead of zero
-        value_trellis = np.full((S, O), small_prob)
+        value_trellis = np.full((S, O), SMALL)
         # path trellis to track argmax
         path_trellis = [[[] for obs in range(O)] for state in range(S)]
 
         # Determine trellis values for 1st column 
         for state in range(S):
             # if (tag, word) doesn't exist, put a small probability
-            value_trellis[state, 0] = prior[state] + emission.get((UNIVERSAL_TAGS[state], sentence[0]), small_prob)
+            value_trellis[state, 0] = prior[state] + emission.get((UNIVERSAL_TAGS[state], sentence[0]), SMALL)
             path_trellis[state][0] = [state]
         
         # For S2 - S1, find the most likely prior for the current state
         for obs in range(1, O):
-            # we need the previous probabilities
-            previous_val = value_trellis[:, obs - 1]
             for state in range(S):
-                # retrieve transition probabilities until current state
-                curr_transition = transition[:, state]
-
                 # retrieve emission probabilities of obs given some tag
-                emission_pair = np.full(N_tags, 1) * emission.get((UNIVERSAL_TAGS[state], sentence[obs]), small_prob)
+                emission_pair = np.full(N_tags, 1) * emission.get((UNIVERSAL_TAGS[state], sentence[obs]), SMALL)
 
                 # combine prev_value with transition and emission
-                combined = np.sum([previous_val, curr_transition, emission_pair], axis=0)
+                combined = np.sum([value_trellis[:, obs - 1], transition[:, state], emission_pair], axis=0)
 
                 # find the indices yielding max
                 max = np.argmax(combined)
